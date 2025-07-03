@@ -31,6 +31,7 @@ CREATE TABLE products (
     name VARCHAR(100) NOT NULL COMMENT '商品名稱',
     price INT NOT NULL COMMENT '商品價格',
     stock INT NOT NULL COMMENT '商品庫存',
+    description TEXT NULL DEFAULT NULL COMMENT '商品描述',
     created_at DATETIME NOT NULL COMMENT '建立時間',
     updated_at DATETIME NOT NULL COMMENT '更新時間'
 );
@@ -60,9 +61,13 @@ CREATE TABLE order_items (
 );
 
 -- index
-CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_created_at ON orders(created_at);
+CREATE INDEX idx_orders_userid_createdat ON orders(user_id, created_at);
 CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX idx_order_items_product_id ON order_items(product_id);
+CREATE INDEX idx_products_price ON products(price);
+CREATE INDEX idx_products_created_at ON products(created_at);
 
 -- Notes:
 -- 1. Please ensure table structure is compatible with generate_test_data.php script

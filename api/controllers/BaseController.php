@@ -3,10 +3,10 @@
 abstract class BaseController {
 
     /**
-     * Sends a JSON response.
+     * 輸出 JSON 回應
      *
-     * @param mixed $data The data to encode.
-     * @param int $statusCode The HTTP status code.
+     * @param mixed $data 要編碼的資料
+     * @param int $statusCode HTTP 狀態碼
      */
     protected function sendJsonResponse($data, $statusCode = 200) {
         http_response_code($statusCode);
@@ -15,10 +15,10 @@ abstract class BaseController {
     }
 
     /**
-     * Sends a JSON error response.
+     * 輸出 JSON 錯誤回應
      *
-     * @param string $message The error message.
-     * @param int $statusCode The HTTP status code.
+     * @param string $message 錯誤訊息
+     * @param int $statusCode HTTP 狀態碼
      */
     protected function sendErrorResponse($message, $statusCode = 500) {
         $this->sendJsonResponse(['error' => $message], $statusCode);

@@ -1,20 +1,86 @@
 <?php
 require_once __DIR__.'/BaseService.php';
 
+/**
+ * OrderService
+ *
+ * 提供訂單相關的資料存取與商業邏輯，包括查詢、建立、更新等。
+ */
 class OrderService extends BaseService {
     public function __construct() {
         parent::__construct();
     }
 
-    public function getAllOrders($page = 1, $limit = 20) {
+    /**
+     * 查詢訂單列表，支援分頁、篩選、排序
+     * @param array $options 查詢選項
+     * @return array
+     */
+    public function getAllOrders($options = []) {
+        // Extract options with defaults
+        $page = $options['page'] ?? 1;
+        $limit = $options['limit'] ?? 20;
+        $filters = $options['filters'] ?? [];
+        $sort = $options['sort'] ?? ['by' => 'created_at', 'order' => 'desc'];
+
         $offset = ($page - 1) * $limit;
-        $stmt = $this->pdo->prepare("SELECT id, user_id, order_number, status, total_amount, created_at, updated_at FROM orders ORDER BY id DESC LIMIT :limit OFFSET :offset");
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+        // Base query
+        $sql = "SELECT id, user_id, order_number, status, total_amount, created_at, updated_at FROM orders";
+        $whereClauses = [];
+        $params = [];
+
+        // Filtering
+        if (!empty($filters['user_id'])) {
+            $whereClauses[] = "user_id = :user_id";
+            $params[':user_id'] = $filters['user_id'];
+        }
+        if (!empty($filters['status'])) {
+            $whereClauses[] = "status = :status";
+            $params[':status'] = $filters['status'];
+        }
+        if (!empty($filters['order_number'])) {
+            $whereClauses[] = "order_number = :order_number";
+            $params[':order_number'] = $filters['order_number'];
+        }
+        if (!empty($filters['start_date'])) {
+            $whereClauses[] = "DATE(created_at) >= :start_date";
+            $params[':start_date'] = $filters['start_date'];
+        }
+        if (!empty($filters['end_date'])) {
+            $whereClauses[] = "DATE(created_at) <= :end_date";
+            $params[':end_date'] = $filters['end_date'];
+        }
+
+        if (!empty($whereClauses)) {
+            $sql .= " WHERE ".implode(" AND ", $whereClauses);
+        }
+
+        // Sorting
+        $allowedSortBy = ['total_amount', 'created_at', 'id'];
+        $sortBy = in_array($sort['by'], $allowedSortBy) ? $sort['by'] : 'created_at';
+        $sortOrder = strtolower($sort['order']) === 'asc' ? 'ASC' : 'DESC';
+        $sql .= " ORDER BY {$sortBy} {$sortOrder}";
+
+        // Pagination
+        $sql .= " LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->pdo->prepare($sql);
+        // 綁定查詢參數
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * 查詢單一訂單
+     * @param int $id
+     * @return array|null
+     */
     public function getOrderById($id) {
         $stmt = $this->pdo->prepare("SELECT id, user_id, order_number, status, total_amount, created_at, updated_at FROM orders WHERE id = :id");
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -22,6 +88,11 @@ class OrderService extends BaseService {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * 建立新訂單
+     * @param array $data
+     * @return int|false 新訂單ID或失敗回傳false
+     */
     public function createOrder($data) {
         $userId = $data['user_id'];
         $items = $data['items'];
@@ -69,14 +140,14 @@ class OrderService extends BaseService {
             $stmt->execute([
                 ':user_id' => $userId,
                 // Using a temporary unique value that will be updated immediately.
-                ':order_number' => 'TEMP-' . uniqid(),
+                ':order_number' => 'TEMP-'.uniqid(),
                 ':status' => 'pending',
                 ':total_amount' => $totalAmount
             ]);
             $orderId = $this->pdo->lastInsertId();
 
             // 4.1. Generate the final order number and update the record
-            $finalOrderNumber = 'ORD' . $orderId;
+            $finalOrderNumber = 'ORD'.$orderId;
             $updateStmt = $this->pdo->prepare("UPDATE orders SET order_number = :order_number WHERE id = :id");
             $updateStmt->execute([
                 ':order_number' => $finalOrderNumber,
@@ -120,6 +191,12 @@ class OrderService extends BaseService {
         }
     }
 
+    /**
+     * 更新訂單狀態
+     * @param int $id
+     * @param string $status
+     * @return int 受影響的列數
+     */
     public function updateOrderStatus($id, $status) {
         $stmt = $this->pdo->prepare("UPDATE orders SET status = :status, updated_at = NOW() WHERE id = :id");
         $stmt->execute([
@@ -129,6 +206,10 @@ class OrderService extends BaseService {
         return $stmt->rowCount();
     }
 
+    /**
+     * 查詢訂單統計資訊
+     * @return array
+     */
     public function getOrderStats() {
         $stmt = $this->pdo->prepare(
             "SELECT
@@ -147,5 +228,23 @@ class OrderService extends BaseService {
             'today_orders' => (int) $stats['today_orders'],
             'today_revenue' => (float) ($stats['today_revenue'] ?? 0)
         ];
+    }
+
+    /**
+     * 查詢指定使用者在指定時間區間內的訂單
+     * @param int $userId
+     * @param string $startDate
+     * @param string $endDate
+     * @return array
+     */
+    public function getUserOrdersByPeriod($userId, $startDate, $endDate) {
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM orders WHERE user_id = :user_id AND created_at BETWEEN :start_date AND :end_date ORDER BY created_at DESC"
+        );
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':start_date', $startDate);
+        $stmt->bindValue(':end_date', $endDate);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

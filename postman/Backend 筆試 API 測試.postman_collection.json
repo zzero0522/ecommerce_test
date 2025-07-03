@@ -1,0 +1,323 @@
+{
+	"info": {
+		"_postman_id": "84f736bb-8127-4dd6-adee-d3b75fb5cc6b",
+		"name": "Backend 筆試 API 測試",
+		"description": "by 李俊霖",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46353186",
+		"_collection_link": "https://rglee-7163863.postman.co/workspace/RG-Lee's-Workspace~c1a4f8d4-9462-48c1-8429-363946210255/collection/46353186-84f736bb-8127-4dd6-adee-d3b75fb5cc6b?action=share&source=collection_link&creator=46353186"
+	},
+	"item": [
+		{
+			"name": "訂單管理",
+			"item": [
+				{
+					"name": "查詢訂單列表",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/orders&page=1&limit=10&status=delivered&sort_by=created_at&sort_order=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/orders",
+									"description": "API 路徑"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "分頁頁碼"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "每頁筆數"
+								},
+								{
+									"key": "status",
+									"value": "delivered",
+									"description": "訂單狀態 (pending, processing, shipped, delivered, cancelled)"
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at",
+									"description": "排序欄位 (total_amount, created_at, id)"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc",
+									"description": "排序方式 (asc, desc)"
+								}
+							]
+						},
+						"description": "取得訂單列表，支援分頁、篩選、排序。"
+					},
+					"response": []
+				},
+				{
+					"name": "查詢單一訂單",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/orders/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/orders/1",
+									"description": "API 路徑"
+								}
+							]
+						},
+						"description": "依訂單 ID 查詢單一訂單。"
+					},
+					"response": []
+				},
+				{
+					"name": "建立訂單",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 1,\n  \"items\": [\n    {\"product_id\": 1, \"quantity\": 2},\n    {\"product_id\": 2, \"quantity\": 1}\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/orders",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/orders",
+									"description": "API 路徑"
+								}
+							]
+						},
+						"description": "建立新訂單，需傳入 user_id 與 items 陣列 (每項含 product_id, quantity)。"
+					},
+					"response": []
+				},
+				{
+					"name": "更新訂單狀態",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"shipped\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/orders/1/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/orders/1/status",
+									"description": "API 路徑"
+								}
+							]
+						},
+						"description": "更新指定訂單的狀態 (pending, processing, shipped, delivered, cancelled)。"
+					},
+					"response": []
+				},
+				{
+					"name": "訂單統計資訊",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/orders/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/orders/stats",
+									"description": "API 路徑"
+								}
+							]
+						},
+						"description": "取得所有訂單的統計資料 (總數、營收等)。"
+					},
+					"response": []
+				},
+				{
+					"name": "查詢使用者區間訂單",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/users/1/orders&start_date=2024-01-01&end_date=2024-06-30",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/users/1/orders",
+									"description": "API 路徑"
+								},
+								{
+									"key": "start_date",
+									"value": "2024-01-01",
+									"description": "起始日期 (YYYY-MM-DD)"
+								},
+								{
+									"key": "end_date",
+									"value": "2024-06-30",
+									"description": "結束日期 (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "查詢指定使用者於指定區間內的所有訂單。"
+					},
+					"response": []
+				}
+			],
+			"description": "訂單相關 API 測試"
+		},
+		{
+			"name": "商品管理",
+			"item": [
+				{
+					"name": "查詢商品列表",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/products&page=1&limit=10&min_price=0&max_price=1000&sort_by=price&sort_order=asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/products",
+									"description": "API 路徑"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "分頁頁碼"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "每頁筆數"
+								},
+								{
+									"key": "min_price",
+									"value": "0",
+									"description": "最低價格 (選填)"
+								},
+								{
+									"key": "max_price",
+									"value": "1000",
+									"description": "最高價格 (選填)"
+								},
+								{
+									"key": "sort_by",
+									"value": "price",
+									"description": "排序欄位 (price, created_at, id)"
+								},
+								{
+									"key": "sort_order",
+									"value": "asc",
+									"description": "排序方式 (asc, desc)"
+								}
+							]
+						},
+						"description": "取得商品列表，支援分頁、價格篩選 (min_price, max_price)、排序 (price, created_at, id)。"
+					},
+					"response": []
+				},
+				{
+					"name": "建立商品",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"新商品\",\n  \"price\": 999,\n  \"stock\": 100,\n  \"description\": \"這是一個測試商品\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php?path=/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/api/products",
+									"description": "API 路徑"
+								}
+							]
+						},
+						"description": "建立新商品，需傳入 name (string)、price (int)、stock (int)、description (string|null)。"
+					},
+					"response": []
+				}
+			],
+			"description": "商品相關 API 測試"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
